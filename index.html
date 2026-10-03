@@ -1,0 +1,756 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Tessera</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=DM+Sans:wght@400;500;700&display=swap">
+<style>
+/* Layout: one phone-width column, big tap targets, bottom tab bar. Motif: a 6x6 mosaic board that fills one tile per care action. */
+:root{
+  --bg:#EDF3F0; --surface:#FFFFFF; --surface2:#F4F8F6; --ink:#14302A; --muted:#566E66; --line:#D3DFDA;
+  --brand:#1D5C4C; --on-brand:#FFFFFF; --on-c:#FFFFFF;
+  --c-cycle:#C93A63; --c-hair:#B87310; --c-energy:#2870BF; --c-kids:#6D4DBD;
+  --b-cycle:#FBE6EC; --b-hair:#FCEFD6; --b-energy:#E1EEFA; --b-kids:#EBE5F8;
+  --good:#2E8B57; --warn:#9A6212;
+  --font-display:'Bricolage Grotesque','Trebuchet MS',system-ui,sans-serif;
+  --font-body:'DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --fs:17px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E1A17; --surface:#16251F; --surface2:#1C2F28; --ink:#E4EFEA; --muted:#9DB4AB; --line:#2B403A;
+  --brand:#5CC6A6; --on-brand:#0E1A17; --on-c:#0E1A17;
+  --c-cycle:#F0719A; --c-hair:#F2B24C; --c-energy:#5AA3EC; --c-kids:#A48CEB;
+  --b-cycle:#3A1F2A; --b-hair:#3A2E17; --b-energy:#1B2E43; --b-kids:#2C2545;
+  --good:#5CC08A; --warn:#E3B04F; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E1A17; --surface:#16251F; --surface2:#1C2F28; --ink:#E4EFEA; --muted:#9DB4AB; --line:#2B403A;
+  --brand:#5CC6A6; --on-brand:#0E1A17; --on-c:#0E1A17;
+  --c-cycle:#F0719A; --c-hair:#F2B24C; --c-energy:#5AA3EC; --c-kids:#A48CEB;
+  --b-cycle:#3A1F2A; --b-hair:#3A2E17; --b-energy:#1B2E43; --b-kids:#2C2545;
+  --good:#5CC08A; --warn:#E3B04F; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body)}
+*{box-sizing:border-box}
+.app{max-width:520px;margin:0 auto;padding-inline:16px;padding-block:14px 120px;font-size:var(--fs);line-height:1.45}
+.j-cycle{--jc:var(--c-cycle);--jb:var(--b-cycle)}
+.j-hair{--jc:var(--c-hair);--jb:var(--b-hair)}
+.j-energy{--jc:var(--c-energy);--jb:var(--b-energy)}
+.j-kids{--jc:var(--c-kids);--jb:var(--b-kids)}
+h1{font:800 1.9em/1.08 var(--font-display);margin:0;text-wrap:balance;letter-spacing:-.01em}
+h2{font:700 1.25em/1.2 var(--font-display);margin:0;text-wrap:balance}
+h3{font:700 1.05em/1.25 var(--font-display);margin:0}
+p{margin:0}
+.muted{color:var(--muted)}
+.small{font-size:.85em}
+.eyebrow{font-size:.72em;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.stack{display:flex;flex-direction:column;gap:12px}
+.stack.lg{gap:20px}
+.row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.row>.grow{flex:1;min-width:0}
+.between{justify-content:space-between}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px}
+.card.tint{background:var(--jb);border-color:transparent}
+button{font-family:inherit;color:inherit}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.btn{min-height:56px;border-radius:16px;border:0;background:var(--brand);color:var(--on-brand);font:700 1em var(--font-body);padding:0 20px;cursor:pointer;width:100%}
+.btn.ghost{background:transparent;color:var(--brand);border:2px solid var(--brand)}
+.btn.sm{min-height:46px;width:auto;font-size:.9em;padding:0 16px}
+.btn.jc{background:var(--jc);color:var(--on-c)}
+.btn:active{transform:scale(.98)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{min-height:46px;padding:0 16px;border-radius:999px;border:2px solid var(--line);background:var(--surface);color:var(--ink);font:500 .95em var(--font-body);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--jc,var(--brand));border-color:var(--jc,var(--brand));color:var(--on-c);font-weight:700}
+.seg{display:grid;grid-template-columns:repeat(auto-fit,minmax(66px,1fr));gap:6px}
+.seg button{min-height:50px;padding:6px 4px;border-radius:14px;border:2px solid var(--line);background:var(--surface);color:var(--ink);font:500 .85em/1.15 var(--font-body);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--jc,var(--brand));border-color:var(--jc,var(--brand));color:var(--on-c);font-weight:700}
+.field{display:flex;flex-direction:column;gap:8px}
+.field>label,.field>.lbl{font-weight:700;font-size:.95em}
+input[type=text],input[type=date],input[type=number]{min-height:52px;border-radius:14px;border:2px solid var(--line);background:var(--surface);color:var(--ink);padding:0 14px;font:500 1em var(--font-body);width:100%}
+textarea{width:100%;min-height:150px;border-radius:14px;border:2px solid var(--line);background:var(--surface2);color:var(--ink);padding:12px;font:400 .85em/1.5 var(--font-body);resize:vertical}
+.stepper{display:flex;align-items:center;gap:12px}
+.stepper button{width:52px;height:52px;border-radius:50%;border:2px solid var(--line);background:var(--surface);font:700 1.4em var(--font-body);cursor:pointer}
+.stepper b{min-width:3.6em;text-align:center;font:800 1.3em var(--font-display);font-variant-numeric:tabular-nums}
+.glasses{display:grid;grid-template-columns:repeat(8,1fr);gap:6px}
+.glasses button{aspect-ratio:3/4;border-radius:6px 6px 12px 12px;border:2px solid var(--c-energy);background:transparent;cursor:pointer;padding:0}
+.glasses button[aria-pressed="true"]{background:var(--c-energy)}
+.meter{height:12px;border-radius:99px;background:var(--line);overflow:hidden}
+.meter i{display:block;height:100%;background:var(--brand);border-radius:99px;transition:width .4s}
+.board{display:grid;grid-template-columns:repeat(6,1fr);gap:5px}
+.cell{aspect-ratio:1;border-radius:7px;border:2px dashed var(--line)}
+.cell.f{border:0;background:var(--cc)}
+.cell.new{animation:pop .55s}
+@keyframes pop{0%{transform:scale(.2)}70%{transform:scale(1.18)}100%{transform:scale(1)}}
+.board.mini{gap:3px;width:104px;flex:none}
+.board.mini .cell{border-width:1px;border-radius:4px}
+.quest{display:flex;align-items:center;gap:14px;min-height:64px;width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:10px 14px;cursor:pointer;font:500 1em var(--font-body)}
+.quest .tk{flex:none;width:32px;height:32px;border-radius:50%;border:2px solid var(--jc,var(--muted));display:grid;place-items:center;color:var(--on-c)}
+.quest.done{background:var(--surface2)}
+.quest.done .tk{background:var(--good);border-color:var(--good)}
+.quest.done .qt{text-decoration:line-through;color:var(--muted)}
+.qt{flex:1;min-width:0}
+.tag{display:inline-block;font-size:.7em;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:99px;background:var(--jb);color:var(--ink)}
+.ritual{display:flex;flex-direction:column;gap:10px}
+.ritual.done{opacity:.7}
+.bars{display:flex;align-items:flex-end;gap:6px;height:100px;border-bottom:2px solid var(--line)}
+.bars div{flex:1;border-radius:6px 6px 2px 2px;background:var(--jc);min-height:6px}
+.bars div.off{background:var(--line)}
+.barlbl{display:flex;gap:6px;font-size:.7em;color:var(--muted)}
+.barlbl span{flex:1;text-align:center}
+.badges{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:10px}
+.bdg{border:1px solid var(--line);border-radius:16px;padding:12px 8px;text-align:center;background:var(--surface);display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}
+.bdg.lock{opacity:.5}
+.bdg .hex{width:44px;height:44px;border-radius:12px;background:var(--brand);color:var(--on-brand);display:grid;place-items:center;font:800 1.1em var(--font-display)}
+.bdg.lock .hex{background:var(--line);color:var(--muted)}
+.bdg b{font-size:.78em;line-height:1.15}
+.bdg span{font-size:.68em;color:var(--muted);line-height:1.2}
+.jcard{display:flex;gap:14px;align-items:center;text-align:left;width:100%;border:0;border-radius:18px;padding:16px;background:var(--jb);cursor:pointer;font:inherit;color:var(--ink)}
+.jcard .sw{flex:none;width:52px;height:52px;border-radius:14px;background:var(--jc);display:grid;place-items:center;color:var(--on-c);font:800 1.3em var(--font-display)}
+.jcard.off{background:var(--surface);border:2px dashed var(--line)}
+.pick{display:flex;gap:14px;align-items:center;text-align:left;width:100%;border:2px solid var(--line);border-radius:18px;padding:14px;background:var(--surface);cursor:pointer;font:inherit;color:var(--ink)}
+.pick[aria-pressed="true"]{border-color:var(--jc);background:var(--jb)}
+.pick .sw{flex:none;width:44px;height:44px;border-radius:12px;background:var(--jc);display:grid;place-items:center;color:var(--on-c);font-weight:800}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.tabs button{min-height:50px;border-radius:14px;border:2px solid var(--line);background:var(--surface);font:700 .92em var(--font-body);cursor:pointer;color:var(--ink)}
+.tabs button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.back{background:none;border:0;color:var(--brand);font:700 1em var(--font-body);min-height:44px;padding:0;cursor:pointer;text-align:left}
+.nav{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);padding:6px 10px calc(6px + env(safe-area-inset-bottom,0px));display:flex;justify-content:center;z-index:5}
+.nav-in{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;width:100%;max-width:520px}
+.nav button{min-height:58px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:0;background:none;color:var(--muted);font:700 .72em var(--font-body);border-radius:14px;cursor:pointer}
+.nav button[aria-current="page"]{color:var(--brand);background:var(--surface2)}
+.nav svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(88px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:18px;font-weight:700;max-width:90vw;text-align:center;opacity:0;pointer-events:none;transition:opacity .2s;z-index:9}
+.toast.on{opacity:1}
+.hint{background:var(--surface2);border:1px dashed var(--line);border-radius:14px;padding:12px 14px;font-size:.9em}
+.note{font-size:.8em;color:var(--muted)}
+.big{font:800 2.2em/1 var(--font-display);font-variant-numeric:tabular-nums}
+.pill{display:inline-flex;align-items:center;gap:6px;border-radius:99px;padding:4px 12px;background:var(--surface2);border:1px solid var(--line);font-weight:700;font-size:.82em}
+.logo{width:56px;height:56px;display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.logo i{border-radius:8px;display:block}
+.dots{display:flex;gap:6px;justify-content:center}
+.dots i{width:9px;height:9px;border-radius:50%;background:var(--line)}
+.dots i.on{background:var(--brand)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+<div class="app" id="app"><main id="view"></main></div>
+<nav class="nav" id="nav" aria-label="Main" hidden><div class="nav-in">
+<button data-a="tab" data-v="today" aria-label="Today"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"/></svg>Today</button>
+<button data-a="tab" data-v="journeys" aria-label="Journeys"><svg viewBox="0 0 24 24"><path d="M12 21s-7-5.2-7-11a7 7 0 0 1 14 0c0 5.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>Journeys</button>
+<button data-a="tab" data-v="mosaic" aria-label="My Mosaic"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg>My Mosaic</button>
+<button data-a="tab" data-v="more" aria-label="More"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>More</button>
+</div></nav>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+(function(){
+'use strict';
+
+/* ---------- Content: journeys, rituals, rewards ---------- */
+var J={
+  cycle:{id:'cycle',ch:'C',brand:'Be Bodywise',name:'Cycle & PCOS',sub:'Periods, symptoms, mood and daily habits',
+    logQ:'Log how your body feels today',cta:'Track my cycle',
+    why:'For irregular or heavy periods, PCOS and PMS. Log in under a minute and see patterns you can take to a doctor.'},
+  hair:{id:'hair',ch:'H',brand:'Be Bodywise · Man Matters',name:'Hair & Scalp',sub:'Shedding, scalp health and your routine',
+    logQ:'Check in on your hair and scalp',cta:'Track my hair',
+    why:'For hair fall, thinning and scalp trouble. Spot what makes shedding better or worse.'},
+  energy:{id:'energy',ch:'E',brand:'Man Matters',name:'Energy & Stress',sub:'Energy, sleep, caffeine and stress',
+    logQ:'Rate your energy and stress',cta:'Track my energy',
+    why:'For tired days, poor sleep and a busy head. Small habits, tracked simply.'},
+  kids:{id:'kids',ch:'K',brand:'Little Joys',name:'Little Joys',sub:'Meals, rainbow plate and bedtime for your child',
+    logQ:'Log your child’s day',cta:'Track my child',
+    why:'For picky eaters and growing kids. Your child collects stickers while you keep an eye on nutrition.'}
+};
+var JIDS=['cycle','hair','energy','kids'];
+
+var SYMS=[['cramps','Cramps'],['bloating','Bloating'],['acne','Breakouts'],['mood','Mood swings'],['fatigue','Tiredness'],['cravings','Sugar cravings'],['hairfall','Hair fall'],['headache','Headache'],['spotting','Spotting']];
+var SYMN={};SYMS.forEach(function(s){SYMN[s[0]]=s[1];});
+var SCALP=[['dry','Dry'],['oily','Oily'],['itchy','Itchy'],['flaky','Flaky'],['tender','Tender']];
+var HAIRDO=[['oil','Oiled scalp'],['wash','Washed hair'],['massage','Scalp massage'],['mask','Hair mask'],['heat','Used heat styling']];
+var HAIRFOOD=[['protein','Ate protein'],['greens','Ate greens'],['skipped','Skipped a meal']];
+var ESYM=[['lowE','Low energy'],['fog','Brain fog'],['stamina','Low stamina'],['shoulders','Tight neck or shoulders'],['acidity','Acidity']];
+var RAINBOW=[['red','Red','tomato, apple'],['orange','Orange','carrot, mango'],['green','Green','palak, peas'],['purple','Purple','beetroot, jamun'],['white','White','banana, curd']];
+var RCOL={red:'#E0524D',orange:'#EE8A2B',green:'#43A25A',purple:'#8A5CC6',white:'#D9D4C7'};
+
+/* Care rituals. tag = kind of care. */
+var PHASES={
+  menstrual:{name:'Rest and reset',blurb:'Energy can dip in the first few days. Be gentle with yourself.'},
+  follicular:{name:'Rising',blurb:'Energy often climbs now. Good time to try something new.'},
+  ovulatory:{name:'Peak',blurb:'Many people feel their most social and strong around now.'},
+  luteal:{name:'Wind down',blurb:'PMS can show up in this stretch. Plan comfort on purpose.'}
+};
+var PHASE_R={
+  menstrual:[
+    {id:'m1',tag:'Self-care',t:'Face mask and movie night',d:'Pick a feel-good film, put on a sheet mask, grab a blanket. Phone on silent for two hours.'},
+    {id:'m2',tag:'Treat',t:'Two squares of dark chocolate',d:'Go for 70% cocoa or more. A small treat lifts the mood and dark chocolate has some magnesium.'},
+    {id:'m3',tag:'Food',t:'Add an iron-rich plate',d:'Dal, palak, rajma, chana or jaggery. Pair with a lime or amla for better absorption.'},
+    {id:'m4',tag:'Move',t:'10 minutes of gentle stretching',d:'Child’s pose and slow cat-cow. Keep it easy. Moving a little often eases cramps.'}],
+  follicular:[
+    {id:'f1',tag:'Move',t:'Try one new workout',d:'Dance video, a new walking route or a beginner strength set. Energy is usually rising.'},
+    {id:'f2',tag:'Food',t:'Protein-first breakfast',d:'Eggs, paneer bhurji, sprouts chilla or Greek yoghurt. Steadier energy and fewer cravings later.'},
+    {id:'f3',tag:'Self-care',t:'Plan your week',d:'Put the important things on the days you usually feel strongest.'}],
+  ovulatory:[
+    {id:'o1',tag:'Move',t:'A strength session',d:'Squats, push-ups, a resistance band. Strength work is great for hormone health.'},
+    {id:'o2',tag:'Self-care',t:'Meet someone you like',d:'Coffee with a friend or a long call with family. Social energy is often higher now.'},
+    {id:'o3',tag:'Food',t:'Eat a colourful salad',d:'Three colours on the plate. Add seeds or nuts for good fats.'}],
+  luteal:[
+    {id:'l1',tag:'Self-care',t:'Face mask and movie night',d:'Cravings and low mood are common now. Plan the comfort instead of fighting it.'},
+    {id:'l2',tag:'Treat',t:'Dark chocolate or a scoop of ice cream',d:'One portion, eaten slowly and without guilt. Pair it with a protein snack so sugar does not spike.'},
+    {id:'l3',tag:'Food',t:'Magnesium-friendly snack',d:'Pumpkin seeds, banana, almonds or a handful of roasted makhana.'},
+    {id:'l4',tag:'Doctor chat',t:'Ask about a daily multivitamin',d:'Many people with PCOS discuss vitamin D, B12 and inositol with a doctor. Ask what suits you before starting.'},
+    {id:'l5',tag:'Self-care',t:'Early night wind-down',d:'Dim the lights an hour before bed, a warm drink, no scrolling in bed.'}]
+};
+var SYM_R={
+  cramps:{id:'s-cramps',tag:'Relief',t:'Warm compress and slow breathing',d:'Hot water bag on the lower belly for 15 minutes. Breathe in for 4, out for 6.'},
+  bloating:{id:'s-bloat',tag:'Relief',t:'Warm fennel or ajwain water',d:'Sip slowly after meals. Take a 10 minute walk instead of lying down.'},
+  acne:{id:'s-acne',tag:'Skin',t:'Gentle cleanse, no picking',d:'Wash with a mild cleanser, apply a spot patch and change the pillowcase.'},
+  mood:{id:'s-mood',tag:'Self-care',t:'Call a friend, then face mask and movie night',d:'Say out loud what feels heavy. Then switch off with something comforting.'},
+  fatigue:{id:'s-fat',tag:'Food',t:'Iron and protein top-up',d:'Add dal, eggs, sprouts or paneer today. If tiredness lasts, mention it to a doctor.'},
+  cravings:{id:'s-crave',tag:'Treat',t:'Plan the treat: dark chocolate or ice cream',d:'Have it after a meal, not on an empty stomach. Enjoy it fully.'},
+  hairfall:{id:'s-hf',tag:'Hair',t:'Five minute scalp massage',d:'Use fingertips, small circles, no nails. Put on a podcast you like.'},
+  headache:{id:'s-head',tag:'Relief',t:'Water, a dark room and ten quiet minutes',d:'Drink a full glass first. If headaches repeat, note when they happen.'},
+  spotting:{id:'s-spot',tag:'Doctor chat',t:'Note it and keep an eye on it',d:'Add the date to your log. If spotting repeats between periods, tell a doctor.'}
+};
+var HAIR_R={
+  dry:{id:'h-dry',tag:'Hair',t:'Warm oil massage before washing',d:'Leave on 30 minutes. Wash with lukewarm water, not hot.'},
+  oily:{id:'h-oily',tag:'Hair',t:'Rinse oil out and keep it light',d:'Wash with a gentle shampoo, focus on the scalp and skip heavy masks near the roots.'},
+  itchy:{id:'h-itch',tag:'Hair',t:'Calm the itch, do not scratch',d:'Use fingertips only. If itching continues for over two weeks, see a doctor.'},
+  flaky:{id:'h-flake',tag:'Hair',t:'Use an anti-dandruff wash twice this week',d:'Leave the lather on for three minutes before rinsing.'},
+  tender:{id:'h-tend',tag:'Doctor chat',t:'Go easy and book a hair expert chat',d:'Skip tight hairstyles. A tender scalp is worth showing to a professional.'},
+  lots:{id:'h-lots',tag:'Food',t:'Protein and iron check',d:'Add eggs, dal, paneer, sprouts or chicken. Shedding often follows low protein and stress.'},
+  base1:{id:'h-b1',tag:'Self-care',t:'Five minute scalp massage',d:'Small circles with fingertips while your favourite song plays. Boosts the feel-good factor too.'},
+  base2:{id:'h-b2',tag:'Food',t:'Drink water and add a handful of nuts',d:'Walnuts, almonds and pumpkin seeds help the hair-friendly nutrient count.'}
+};
+var ENERGY_R={
+  lowsleep:{id:'e-sleep',tag:'Sleep',t:'Phone out of bed tonight',d:'Charge it across the room. Aim to sleep within 30 minutes of the same time.'},
+  caffeine:{id:'e-caf',tag:'Habit',t:'Last chai or coffee by 2 pm',d:'Caffeine stays in the body for hours. An earlier cut-off helps sleep.'},
+  low:{id:'e-sun',tag:'Move',t:'10 minutes of morning sunlight',d:'Walk outside without headphones. It helps your body clock and mood.'},
+  stress:{id:'e-box',tag:'Calm',t:'Box breathing, 4 rounds',d:'In for 4, hold 4, out 4, hold 4. Do it before a meeting or at the desk.'},
+  food:{id:'e-prot',tag:'Food',t:'Protein breakfast',d:'Eggs, paneer, besan chilla or curd with nuts keeps energy steadier till lunch.'},
+  walk:{id:'e-walk',tag:'Move',t:'Walk after lunch',d:'Ten minutes helps digestion and the afternoon slump.'}
+};
+var KIDS_R={
+  refused:{id:'k-swap',tag:'Food',t:'Hide the veg in a favourite',d:'Grated carrot in paratha, spinach in pancakes, beetroot in cutlets.'},
+  rainbow:{id:'k-rain',tag:'Fun',t:'Rainbow plate challenge',d:'Ask your child to find one new colour for dinner. Each colour earns a sticker.'},
+  cook:{id:'k-cook',tag:'Fun',t:'Cook one thing together',d:'Washing, tearing and stirring count. Kids eat more of what they helped make.'},
+  story:{id:'k-story',tag:'Sleep',t:'Story time wind-down',d:'Same book, same time. Lights low, screens off 30 minutes before bed.'},
+  play:{id:'k-play',tag:'Move',t:'30 minutes of outdoor play',d:'Park, terrace, or a dance break at home. Sunlight and running help appetite and sleep.'},
+  snack:{id:'k-snack',tag:'Food',t:'Swap one packaged snack',d:'Try makhana, banana-oat pancakes or fruit on a stick instead.'}
+};
+
+var LEVELS=[[0,'Seed'],[40,'Spark'],[120,'Glow'],[260,'Radiant'],[450,'Mosaic Master']];
+var TREATS=[
+  {lv:1,t:'Pick tonight’s movie',d:'You earned the right to choose. No negotiating.'},
+  {lv:2,t:'A guilt-free dessert',d:'One scoop, one square or one ladoo. Eat it slowly.'},
+  {lv:3,t:'An hour that is only yours',d:'Mask, bath, book or nap. Tell the house it is booked.'},
+  {lv:4,t:'Buy yourself something small',d:'A new hair clip, a scented candle or a fresh notebook.'}
+];
+var BADGES=[
+  ['first','1','First Tile','Log your first check-in'],
+  ['streak3','3','3-Day Streak','Show up three days in a row'],
+  ['streak7','7','7-Day Streak','A whole week of care'],
+  ['tiles10','10','Ten Tiles','Collect 10 tiles'],
+  ['board','36','Full Board','Complete a 6 by 6 mosaic'],
+  ['cycle3','C','Cycle Detective','Log 3 period start dates'],
+  ['water','W','Hydration Hero','6+ glasses on 3 days'],
+  ['sleep','Z','Sleep Saver','7+ hours on 3 days'],
+  ['rit5','R','Self-Care Pro','Finish 5 care rituals'],
+  ['scalp','S','Scalp Soother','Log 3 hair check-ins'],
+  ['rainbow','★','Rainbow Plate','All 5 colours in a day'],
+  ['brave','B','Brave Taster','Try 3 new foods']
+];
+
+/* ---------- State ---------- */
+var KEY='tessera-v1';
+function blank(){return{onboarded:false,name:'',who:'me',journeys:[],size:1,tiles:[],xp:0,days:{},periods:[],periodLen:5,
+  kid:{name:'',age:4},streak:{n:0,last:'',freeze:1},badges:{},awarded:{},bonus:{},demo:false};}
+var S=blank();
+try{var raw=localStorage.getItem(KEY);if(raw){S=Object.assign(blank(),JSON.parse(raw));}}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+
+/* ---------- Dates ---------- */
+function pad(n){return String(n).padStart(2,'0');}
+function dk(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());}
+function parse(k){var a=k.split('-').map(Number);return new Date(a[0],a[1]-1,a[2]);}
+function today(){return dk(new Date());}
+function addDays(k,n){var d=parse(k);d.setDate(d.getDate()+n);return dk(d);}
+function diff(a,b){return Math.round((parse(b)-parse(a))/864e5);}
+function fmt(k){return parse(k).toLocaleDateString('en-IN',{day:'numeric',month:'short'});}
+function dow(k){return parse(k).toLocaleDateString('en-IN',{weekday:'narrow'});}
+function lastN(n){var o=[],t=today();for(var i=n-1;i>=0;i--)o.push(addDays(t,-i));return o;}
+function day(k){if(!S.days[k])S.days[k]={};return S.days[k];}
+function dj(j,k){var d=day(k||today());if(!d[j])d[j]={};return d[j];}
+function peek(j,k){var d=S.days[k];return d&&d[j]?d[j]:null;}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function avg(a){return a.length?a.reduce(function(x,y){return x+y;},0)/a.length:0;}
+function has(j){return S.journeys.indexOf(j)>-1;}
+
+/* ---------- Toasts ---------- */
+var toastT=null,popIdx=-1;
+function toast(msg){var el=document.getElementById('toast');el.textContent=msg;el.classList.add('on');clearTimeout(toastT);toastT=setTimeout(function(){el.classList.remove('on');},2600);}
+
+/* ---------- Rewards ---------- */
+function level(){var i=0;LEVELS.forEach(function(l,x){if(S.xp>=l[0])i=x;});var nx=LEVELS[i+1];return{i:i,name:LEVELS[i][1],next:nx?nx[0]:null,from:LEVELS[i][0],nextName:nx?nx[1]:''};}
+function touchStreak(){
+  var t=today(),s=S.streak;if(s.last===t)return;
+  if(!s.last){s.n=1;}else{var g=diff(s.last,t);
+    if(g===1)s.n++;else if(g===2&&s.freeze>0){s.freeze--;s.n++;toast('Rest day covered by a streak freeze');}else s.n=1;}
+  s.last=t;if(s.n%7===0)s.freeze=Math.min(2,s.freeze+1);
+}
+function award(j,key,why,xp){
+  var k=today()+'|'+key;if(S.awarded[k])return false;
+  S.awarded[k]=1;var before=level().i;
+  S.tiles.push({j:j,t:Date.now(),w:why});popIdx=S.tiles.length-1;S.xp+=(xp||10);
+  touchStreak();var nb=checkBadges();var after=level();
+  var m='+1 tile';if(after.i>before)m='Level up: '+after.name+'. A new treat card is unlocked';else if(nb)m='Badge unlocked: '+nb;
+  toast(m);save();return true;
+}
+function countDays(fn){var n=0;Object.keys(S.days).forEach(function(k){if(fn(S.days[k]))n++;});return n;}
+function countRit(){var n=0;Object.keys(S.days).forEach(function(k){n+=(S.days[k].rit||[]).length;});return n;}
+function badgeTest(id){
+  switch(id){
+    case 'first':return S.tiles.length>=1;
+    case 'streak3':return S.streak.n>=3;
+    case 'streak7':return S.streak.n>=7;
+    case 'tiles10':return S.tiles.length>=10;
+    case 'board':return S.tiles.length>=36;
+    case 'cycle3':return S.periods.length>=3;
+    case 'water':return countDays(function(d){return (d.water||0)>=6;})>=3;
+    case 'sleep':return countDays(function(d){return (d.sleep||0)>=7;})>=3;
+    case 'rit5':return countRit()>=5;
+    case 'scalp':return countDays(function(d){return d.hair&&d.hair.saved;})>=3;
+    case 'rainbow':return countDays(function(d){return d.kids&&(d.kids.rb||[]).length>=5;})>=1;
+    case 'brave':return countDays(function(d){return d.kids&&d.kids.tried;})>=3;
+  }return false;
+}
+function checkBadges(){
+  var last='';BADGES.forEach(function(b){if(!S.badges[b[0]]&&badgeTest(b[0])){S.badges[b[0]]=Date.now();last=b[2];}});return last;
+}
+
+/* ---------- Cycle maths ---------- */
+function cycleInfo(){
+  var p=S.periods.slice().sort(),t=today(),lens=[];
+  for(var i=1;i<p.length;i++)lens.push(diff(p[i-1],p[i]));
+  var rec=lens.slice(-4),a=rec.length?Math.round(avg(rec)):28;
+  var irr=lens.length>=2&&(Math.max.apply(null,lens)-Math.min.apply(null,lens)>7||Math.max.apply(null,lens)>35);
+  if(!p.length)return{has:false,avg:a,irr:irr,lens:lens};
+  var last=p[p.length-1],d=diff(last,t)+1,next=addDays(last,a),toNext=diff(t,next),ov=a-14,ph;
+  if(d<1)ph='luteal';else if(d<=S.periodLen)ph='menstrual';else if(d<ov-1)ph='follicular';else if(d<=ov+1)ph='ovulatory';else ph='luteal';
+  return{has:true,last:last,day:d,avg:a,next:next,toNext:toNext,phase:ph,irr:irr,lens:lens};
+}
+
+/* ---------- Personalised rituals ---------- */
+function pushUniq(arr,r){if(r&&!arr.some(function(x){return x.id===r.id;}))arr.push(r);}
+function ritualsFor(j){
+  var out=[],t=today(),r=peek(j,t)||{};
+  if(j==='cycle'){
+    (r.symptoms||[]).slice(0,2).forEach(function(s){pushUniq(out,SYM_R[s]);});
+    if(r.mood&&r.mood<=2)pushUniq(out,SYM_R.mood);
+    var ci=cycleInfo(),ph=ci.has?ci.phase:'follicular';
+    PHASE_R[ph].forEach(function(x){pushUniq(out,x);});
+  }else if(j==='hair'){
+    if(r.shed==='lots')pushUniq(out,HAIR_R.lots);
+    (r.scalp||[]).forEach(function(s){pushUniq(out,HAIR_R[s]);});
+    pushUniq(out,HAIR_R.base1);pushUniq(out,HAIR_R.base2);
+  }else if(j==='energy'){
+    var sl=day(t).sleep;
+    if(sl&&sl<7)pushUniq(out,ENERGY_R.lowsleep);
+    if((r.caffeine||0)>=3)pushUniq(out,ENERGY_R.caffeine);
+    if(r.stress==='high')pushUniq(out,ENERGY_R.stress);
+    if(r.energy&&r.energy<=2)pushUniq(out,ENERGY_R.low);
+    ['food','walk','stress','caffeine','low','lowsleep'].forEach(function(k){pushUniq(out,ENERGY_R[k]);});
+  }else if(j==='kids'){
+    if(r.appetite==='refused')pushUniq(out,KIDS_R.refused);
+    if((r.rb||[]).length<3)pushUniq(out,KIDS_R.rainbow);
+    if(r.play==='none')pushUniq(out,KIDS_R.play);
+    ['story','cook','snack','refused','play','rainbow'].forEach(function(k){pushUniq(out,KIDS_R[k]);});
+  }
+  return out.slice(0,5);
+}
+function ritDone(id){return (day(today()).rit||[]).indexOf(id)>-1;}
+function doRitual(j,id){
+  var d=day(today());d.rit=d.rit||[];if(d.rit.indexOf(id)>-1)return;
+  d.rit.push(id);if(!award(j,'rit-'+id,'ritual',12)){save();}
+  allQuestsBonus();
+}
+
+/* ---------- Daily quests ---------- */
+function quests(){
+  var t=today(),q=[];
+  S.journeys.forEach(function(j){var r=peek(j,t);q.push({id:'log-'+j,j:j,t:J[j].logQ,done:!!(r&&r.saved),go:'journey'});});
+  q.push({id:'rit',j:S.journeys[0]||'cycle',t:'Do one care ritual',done:(day(t).rit||[]).length>0,go:'care'});
+  q.push({id:'water',j:S.journeys[0]||'cycle',t:'Drink 6 glasses of water',done:(day(t).water||0)>=6,go:'basics'});
+  return q;
+}
+function allQuestsBonus(){
+  var t=today(),q=quests();
+  if(q.length&&q.every(function(x){return x.done;})&&!S.bonus[t]){S.bonus[t]=1;S.xp+=20;S.tiles.push({j:S.journeys[0]||'cycle',t:Date.now(),w:'bonus'});popIdx=S.tiles.length-1;touchStreak();checkBadges();toast('Daily mosaic complete: bonus tile and 20 XP');}
+  save();
+}
+
+/* ---------- Insights ---------- */
+function symCounts(n){
+  var c={};lastN(n).forEach(function(k){var r=peek('cycle',k);if(r&&r.symptoms)r.symptoms.forEach(function(s){c[s]=(c[s]||0)+1;});});
+  return Object.keys(c).map(function(k){return[k,c[k]];}).sort(function(a,b){return b[1]-a[1];});
+}
+function sleepLink(){
+  var lo=[],hi=[];
+  Object.keys(S.days).forEach(function(k){var d=S.days[k];if(d.cycle&&d.cycle.saved&&d.sleep){var n=(d.cycle.symptoms||[]).length;(d.sleep<7?lo:hi).push(n);}});
+  if(lo.length>=2&&hi.length>=2){var a=avg(lo),b=avg(hi);if(a-b>=0.5)return 'On days you slept under 7 hours you logged '+a.toFixed(1)+' symptoms on average, against '+b.toFixed(1)+' after 7 hours or more.';}
+  return '';
+}
+function energyLink(){
+  var lo=[],hi=[];
+  Object.keys(S.days).forEach(function(k){var d=S.days[k];if(d.energy&&d.energy.saved&&d.sleep&&d.energy.energy){(d.sleep<7?lo:hi).push(d.energy.energy);}});
+  if(lo.length>=2&&hi.length>=2){var a=avg(lo),b=avg(hi);if(b-a>=0.4)return 'Your energy averages '+b.toFixed(1)+' out of 5 after 7+ hours of sleep, against '+a.toFixed(1)+' after less.';}
+  return '';
+}
+function shedLevel(v){return v==='lots'?3:v==='some'?2:v==='few'?1:0;}
+
+/* ---------- Care summary (for a doctor or expert) ---------- */
+function summary(){
+  var L=['TESSERA CARE SUMMARY','Name: '+(S.name||'Not set'),'Created: '+fmt(today()),''];
+  if(has('cycle')){
+    var ci=cycleInfo();L.push('CYCLE');
+    if(ci.has){L.push('Last period started: '+fmt(ci.last)+'. Period length about '+S.periodLen+' days.');
+      L.push('Average cycle: '+ci.avg+' days'+(ci.lens.length?' (range '+Math.min.apply(null,ci.lens)+' to '+Math.max.apply(null,ci.lens)+' days across '+ci.lens.length+' cycles)':'')+'.');
+      if(ci.irr)L.push('Cycle length varies a lot. Worth discussing irregular cycles.');}
+    else L.push('No period dates logged yet.');
+    var sc=symCounts(30).slice(0,4);if(sc.length)L.push('Most logged symptoms (30 days): '+sc.map(function(x){return SYMN[x[0]]+' ('+x[1]+' days)';}).join(', ')+'.');
+    var sl=sleepLink();if(sl)L.push(sl);L.push('');
+  }
+  if(has('hair')){
+    var hs=lastN(30).map(function(k){return peek('hair',k);}).filter(function(r){return r&&r.shed;});
+    L.push('HAIR AND SCALP');
+    if(hs.length){var lots=hs.filter(function(r){return r.shed==='lots';}).length;L.push('Heavy shedding on '+lots+' of '+hs.length+' logged days in the last 30 days.');}
+    else L.push('No hair check-ins yet.');L.push('');
+  }
+  if(has('energy')){
+    var es=lastN(30).map(function(k){return peek('energy',k);}).filter(function(r){return r&&r.energy;});
+    L.push('ENERGY AND STRESS');
+    if(es.length)L.push('Average energy '+avg(es.map(function(r){return r.energy;})).toFixed(1)+' out of 5 over '+es.length+' days.');else L.push('No energy check-ins yet.');
+    var el=energyLink();if(el)L.push(el);L.push('');
+  }
+  if(has('kids')){
+    var ks=lastN(14).map(function(k){return peek('kids',k);}).filter(function(r){return r&&r.saved;});
+    L.push('CHILD: '+(S.kid.name||'Child')+', age '+S.kid.age);
+    if(ks.length){L.push('Ate well on '+ks.filter(function(r){return r.appetite==='well';}).length+' of '+ks.length+' logged days. Average rainbow colours per day: '+avg(ks.map(function(r){return (r.rb||[]).length;})).toFixed(1)+' of 5.');}
+    else L.push('No daily logs yet.');L.push('');
+  }
+  var bs=lastN(14).map(function(k){return S.days[k];}).filter(function(d){return d&&d.sleep;});
+  if(bs.length)L.push('Average sleep (14 days): '+avg(bs.map(function(d){return d.sleep;})).toFixed(1)+' hours.');
+  L.push('This is self-reported wellness tracking, not a diagnosis.');
+  return L.join('\n');
+}
+
+/* ---------- Demo profile ---------- */
+function seedDemo(){
+  S=blank();S.onboarded=true;S.demo=true;S.name='Priya';S.who='me';S.size=1;S.journeys=['cycle','hair','energy','kids'];S.kid={name:'Aarav',age:4};
+  var t=today();S.periods=[addDays(t,-96),addDays(t,-58),addDays(t,-27)];
+  var SY=[['bloating','cravings'],['acne','mood'],['fatigue'],['cramps','bloating'],[],['acne'],['cravings','mood'],['fatigue','bloating'],['acne','cravings'],['mood'],['bloating'],['acne']];
+  var SL=[6,5.5,7,6,8,6.5,7.5,5,6,7,8,6],WA=[4,5,7,6,8,3,6,5,7,6,8,4];
+  var SH=['some','lots','some','few','some','lots','some','few','some','lots','some','few'];
+  var SC=[['dry'],['oily','itchy'],[],['dry'],['flaky'],[],['oily'],['dry'],[],['itchy'],['dry'],[]];
+  var EN=[3,2,4,3,5,3,4,2,3,4,5,3],AP=['well','some','well','refused','well','some','well','well','some','well','refused','well'];
+  var RB=[['red','green','white'],['orange','white'],['red','orange','green','white'],['white'],['red','green','purple','white','orange'],['green','white'],['red','orange','white'],['white','green'],['red','orange','green'],['orange','white'],['white'],['red','green','white']];
+  for(var i=1;i<=12;i++){
+    var k=addDays(t,-i),x=i-1,d=day(k);d.sleep=SL[x];d.water=WA[x];
+    d.cycle={saved:true,mood:1+((x*3)%5)+(x%5===4?0:0),symptoms:SY[x],move:['rest','walk','workout'][x%3],stress:['low','medium','high'][x%3],flow:i>=26&&i<=30?'medium':'none'};
+    d.hair={saved:true,shed:SH[x],scalp:SC[x],did:x%3===0?['oil','massage']:['wash'],food:x%2?['protein']:['greens']};
+    d.energy={saved:true,energy:EN[x],caffeine:1+(x%4),stress:['low','medium','high'][x%3],move:['rest','walk','workout'][x%3]};
+    d.kids={saved:true,appetite:AP[x],rb:RB[x],tried:x%4===1,play:['none','30','60'][x%3],sleep:['lt9','9','11'][x%3]};
+    if(x%3===0)d.rit=['m1','h-b1'];
+  }
+  day(t).water=3;day(t).sleep=6.5;
+  var js=['cycle','hair','energy','kids'];
+  for(var n=0;n<22;n++)S.tiles.push({j:js[n%4],t:Date.now()-n*36e5,w:'demo'});
+  S.xp=205;S.streak={n:6,last:addDays(t,-1),freeze:1};popIdx=-1;checkBadges();save();
+}
+
+/* ---------- UI helpers ---------- */
+var V={tab:'today',j:null,sub:'log',ob:0,confirm:false};
+var view=document.getElementById('view'),nav=document.getElementById('nav');
+var SPEAK=('speechSynthesis' in window)&&typeof SpeechSynthesisUtterance!=='undefined';
+function cv(j){return 'var(--c-'+j+')';}
+function greet(){var h=new Date().getHours();return h<12?'Good morning':h<17?'Good afternoon':'Good evening';}
+function who(){return S.name?esc(S.name):'there';}
+function boardHtml(mini){
+  var n=S.tiles.length,cur=n%36;if(n>0&&cur===0)cur=36;
+  var start=n-cur,h='<div class="board'+(mini?' mini':'')+'" aria-hidden="true">';
+  for(var i=0;i<36;i++){
+    if(i<cur){var t=S.tiles[start+i];h+='<div class="cell f'+(start+i===popIdx?' new':'')+'" style="--cc:'+cv(t.j)+'"></div>';}
+    else h+='<div class="cell"></div>';
+  }
+  return h+'</div>';
+}
+function seg(j,f,opts,cur){
+  return '<div class="seg" role="group">'+opts.map(function(o){
+    return '<button aria-pressed="'+(String(cur)===String(o[0]))+'" data-a="set" data-j="'+j+'" data-f="'+f+'" data-v="'+o[0]+'">'+o[1]+'</button>';}).join('')+'</div>';
+}
+function chips(j,f,opts,arr){
+  arr=arr||[];
+  return '<div class="chips">'+opts.map(function(o){
+    return '<button class="chip" aria-pressed="'+(arr.indexOf(o[0])>-1)+'" data-a="tog" data-j="'+j+'" data-f="'+f+'" data-v="'+o[0]+'">'+o[1]+'</button>';}).join('')+'</div>';
+}
+function flagChip(j,f,label,cur){return '<button class="chip" aria-pressed="'+(!!cur)+'" data-a="flag" data-j="'+j+'" data-f="'+f+'">'+label+'</button>';}
+function fld(label,inner){return '<div class="field"><span class="lbl">'+label+'</span>'+inner+'</div>';}
+function bars(vals,labels,j){
+  return '<div class="j-'+j+'"><div class="bars">'+vals.map(function(v){return '<div class="'+(v==null?'off':'')+'" style="height:'+(v==null?6:Math.max(10,Math.round(v*100)))+'%"></div>';}).join('')+'</div><div class="barlbl">'+labels.map(function(l){return '<span>'+l+'</span>';}).join('')+'</div></div>';
+}
+function ritualCard(j,r){
+  var d=ritDone(r.id);
+  return '<article class="card ritual j-'+j+(d?' done':'')+'"><div class="row between"><span class="tag">'+r.tag+'</span><span class="note">'+esc(J[j].name)+'</span></div><h3>'+r.t+'</h3><p class="muted">'+r.d+'</p><div class="row"><button class="btn sm jc" data-a="rit" data-j="'+j+'" data-v="'+r.id+'"'+(d?' disabled':'')+'>'+(d?'Done today':'Mark done (+1 tile)')+'</button>'+(SPEAK?'<button class="btn sm ghost" data-a="say" data-t="'+esc(r.t+'. '+r.d)+'">Listen</button>':'')+'</div></article>';
+}
+
+/* ---------- Onboarding ---------- */
+function onboarding(){
+  var s=V.ob,dots='<div class="dots" aria-hidden="true">'+[0,1,2,3].map(function(i){return '<i class="'+(i<=s?'on':'')+'"></i>';}).join('')+'</div>';
+  if(s===0)return '<div class="stack lg" style="padding-top:12px"><div class="logo" aria-hidden="true"><i style="background:var(--c-cycle)"></i><i style="background:var(--c-hair)"></i><i style="background:var(--c-energy)"></i><i style="background:var(--c-kids)"></i></div>'+
+    '<div class="stack"><p class="eyebrow">Tessera</p><h1>Care that fits into your day.</h1><p class="muted">Short check-ins for periods and PCOS, hair, energy and your child’s meals. Every check-in adds a tile to your mosaic.</p></div>'+
+    '<div class="stack"><div class="card j-cycle tint"><h3>1. Tell us a little</h3><p>Your name and what you want to look after.</p></div><div class="card j-hair tint"><h3>2. Check in under a minute</h3><p>Big buttons. No typing needed.</p></div><div class="card j-kids tint"><h3>3. Collect tiles and treats</h3><p>Streaks, badges and little rewards for showing up.</p></div></div>'+
+    '<div class="stack"><button class="btn" data-a="ob-next">Start my mosaic</button><button class="btn ghost" data-a="demo">Peek at a demo week first</button></div><p class="note">Tessera is wellness tracking, not medical advice.</p></div>';
+  if(s===1)return '<div class="stack lg">'+dots+'<h1>What should we call you?</h1><div class="field"><label for="nm">Your first name</label><input type="text" id="nm" data-i="name" value="'+esc(S.name)+'" autocomplete="given-name" placeholder="For example, Priya"></div>'+
+    fld('Text size',textSizeSeg())+'<div class="stack"><button class="btn" data-a="ob-next">Next</button><button class="back" data-a="ob-back">Back</button></div></div>';
+  if(s===2)return '<div class="stack lg">'+dots+'<div class="stack"><h1>What would you like to look after?</h1><p class="muted">Pick one or more. You can change this any time.</p></div><div class="stack">'+
+    JIDS.map(function(j){return '<button class="pick j-'+j+'" aria-pressed="'+has(j)+'" data-a="jtog" data-v="'+j+'"><span class="sw">'+J[j].ch+'</span><span><b>'+J[j].name+'</b><br><span class="small muted">'+J[j].brand+' · '+J[j].sub+'</span></span></button>';}).join('')+
+    '</div><div class="stack"><button class="btn" data-a="ob-next"'+(S.journeys.length?'':' disabled')+'>Next</button><button class="back" data-a="ob-back">Back</button></div></div>';
+  var f='';
+  if(has('cycle'))f+='<div class="field"><label for="pd">When did your last period start? (optional)</label><input type="date" id="pd" data-i="pdate" max="'+today()+'"></div>';
+  if(has('kids'))f+='<div class="field"><label for="kn">Your child’s first name</label><input type="text" id="kn" data-i="kidname" value="'+esc(S.kid.name)+'" placeholder="For example, Aarav"></div><div class="field"><label for="ka">Child’s age in years</label><input type="number" id="ka" data-i="kidage" min="1" max="12" value="'+S.kid.age+'" inputmode="numeric"></div>';
+  if(!f)f='<p class="muted">Nothing more to ask. You are ready to start.</p>';
+  return '<div class="stack lg">'+dots+'<h1>A few details</h1>'+f+'<div class="stack"><button class="btn" data-a="ob-finish">Open my mosaic</button><button class="back" data-a="ob-back">Back</button></div></div>';
+}
+function textSizeSeg(){return '<div class="seg" role="group">'+[[0,'Small'],[1,'Medium'],[2,'Large']].map(function(o){return '<button aria-pressed="'+(S.size===o[0])+'" data-a="size" data-v="'+o[0]+'" style="font-size:'+(14+o[0]*3)+'px">'+o[1]+'</button>';}).join('')+'</div>';}
+
+/* ---------- Today ---------- */
+function cycleCard(){
+  var ci=cycleInfo(),h='<section class="card tint j-cycle stack"><span class="eyebrow">Be Bodywise · Cycle</span>';
+  if(!ci.has)return h+'<h2>When did your last period start?</h2><p>Add one date and we will estimate where you are in your cycle.</p><button class="btn jc" data-a="open" data-v="cycle">Add my period date</button></section>';
+  var P=PHASES[ci.phase];
+  h+='<div class="row between"><h2>'+P.name+'</h2><span class="pill">Day '+ci.day+'</span></div><p>'+P.blurb+'</p>';
+  if(ci.toNext>=0)h+='<p><b>Next period expected '+(ci.toNext===0?'today':'in '+ci.toNext+' day'+(ci.toNext===1?'':'s'))+'</b> (around '+fmt(ci.next)+').</p>';
+  else h+='<p><b>Running '+(-ci.toNext)+' day'+(ci.toNext===-1?'':'s')+' past your usual '+ci.avg+'-day cycle.</b> Late or longer cycles are common with PCOS. Log the date when it starts.</p>';
+  if(ci.irr)h+='<p class="small">Your cycle lengths have varied a lot, so these dates are rough estimates.</p>';
+  return h+'<button class="btn jc" data-a="open" data-v="cycle">Open my cycle</button></section>';
+}
+function todayView(){
+  var L=level(),qs=quests(),done=qs.filter(function(q){return q.done;}).length,nq=qs.filter(function(q){return !q.done;})[0];
+  var pct=L.next?Math.round((S.xp-L.from)/(L.next-L.from)*100):100;
+  var d=day(today()),water=d.water||0,sl=d.sleep;
+  var h='<div class="stack lg"><div><p class="eyebrow">'+new Date().toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long'})+'</p><h1>'+greet()+', '+who()+'</h1></div>';
+  h+='<section class="card"><div class="row" style="flex-wrap:nowrap;align-items:flex-start"><div class="grow stack" style="gap:8px"><span class="eyebrow">Level '+(L.i+1)+'</span><h2>'+L.name+'</h2><div class="meter" role="progressbar" aria-valuenow="'+pct+'" aria-valuemin="0" aria-valuemax="100"><i style="width:'+pct+'%"></i></div><p class="small muted">'+(L.next?(L.next-S.xp)+' XP to '+L.nextName:'Top level reached')+'</p><div class="row" style="gap:6px"><span class="pill">'+S.streak.n+'-day streak</span><span class="pill">'+S.tiles.length+' tiles</span></div></div>'+boardHtml(true)+'</div></section>';
+  if(!S.hintDone)h+='<div class="hint">New here? Tap any task below. Each one you finish adds a coloured tile to your mosaic. <button class="back" data-a="dismiss" style="min-height:36px">Got it</button></div>';
+  h+='<section class="stack"><div class="row between"><h2>Today’s tasks</h2><span class="pill">'+done+' of '+qs.length+'</span></div>'+
+    qs.map(function(q,i){return '<button class="quest j-'+q.j+(q.done?' done':'')+'" data-a="quest" data-v="'+i+'"><span class="tk" aria-hidden="true">'+(q.done?'✓':'')+'</span><span class="qt">'+q.t+'</span></button>';}).join('')+'</section>';
+  if(nq)h+='<button class="btn" data-a="quest" data-v="'+qs.indexOf(nq)+'">Start: '+nq.t+'</button>';
+  else h+='<button class="btn" data-a="tab" data-v="mosaic">All done. See my mosaic</button>';
+  if(has('cycle'))h+=cycleCard();
+  h+='<section class="card stack" id="basics"><h2>Body basics</h2><div class="field"><span class="lbl">Water today: '+water+' of 8 glasses</span><div class="glasses">'+[1,2,3,4,5,6,7,8].map(function(i){return '<button aria-label="'+i+' glasses" aria-pressed="'+(water>=i)+'" data-a="water" data-v="'+i+'"></button>';}).join('')+'</div></div>'+
+    '<div class="field"><span class="lbl">Hours you slept last night</span><div class="stepper"><button data-a="sleep" data-v="-0.5" aria-label="Less sleep">−</button><b>'+(sl==null?'–':sl)+'</b><button data-a="sleep" data-v="0.5" aria-label="More sleep">+</button></div></div></section>';
+  h+='<section class="stack"><h2>Care for today</h2>';
+  S.journeys.slice(0,3).forEach(function(j){var r=ritualsFor(j).filter(function(x){return !ritDone(x.id);})[0]||ritualsFor(j)[0];if(r)h+=ritualCard(j,r);});
+  h+='</section></div>';return h;
+}
+
+/* ---------- Journeys ---------- */
+function journeysView(){
+  var h='<div class="stack lg"><div><h1>Journeys</h1><p class="muted">Each one is built around a Mosaic Wellness brand.</p></div><div class="stack">';
+  JIDS.forEach(function(j){
+    var on=has(j),r=peek(j,today()),st=on?(r&&r.saved?'Checked in today':'Open'):'Add';
+    h+='<button class="jcard j-'+j+(on?'':' off')+'" data-a="open" data-v="'+j+'"><span class="sw" aria-hidden="true">'+J[j].ch+'</span><span class="grow" style="flex:1;min-width:0"><span class="eyebrow">'+J[j].brand+'</span><br><b style="font-size:1.1em">'+J[j].name+'</b><br><span class="small muted">'+J[j].sub+'</span></span><span class="pill">'+st+'</span></button>';
+  });
+  return h+'</div></div>';
+}
+function logForm(j){
+  var r=dj(j),h='<div class="stack lg j-'+j+'">';
+  if(j==='cycle'){
+    var ci=cycleInfo();
+    h+='<section class="card stack"><h3>Your period</h3><p class="muted">'+(ci.has?'Last period started '+fmt(ci.last)+'. Average cycle '+ci.avg+' days.':'No dates logged yet.')+'</p>'+
+      '<div class="field"><label for="pdate">Start date</label><input type="date" id="pdate" value="'+today()+'" max="'+today()+'"></div><button class="btn jc" data-a="period">My period started on this date</button>'+
+      (S.periods.length?'<button class="btn ghost sm" data-a="undoPeriod">Remove last date ('+fmt(S.periods.slice().sort().pop())+')</button>':'')+
+      '<div class="field"><span class="lbl">Usual period length</span><div class="stepper"><button data-a="plen" data-v="-1" aria-label="Fewer days">−</button><b>'+S.periodLen+' days</b><button data-a="plen" data-v="1" aria-label="More days">+</button></div></div></section>'+
+      fld('Flow today',seg(j,'flow',[['none','None'],['light','Light'],['medium','Medium'],['heavy','Heavy']],r.flow))+
+      fld('Mood today',seg(j,'mood',[[1,'Low'],[2,'Meh'],[3,'Okay'],[4,'Good'],[5,'Great']],r.mood))+
+      fld('Any symptoms today?',chips(j,'symptoms',SYMS,r.symptoms))+
+      fld('Movement today',seg(j,'move',[['rest','Rested'],['walk','Walked'],['workout','Worked out']],r.move))+
+      fld('Stress today',seg(j,'stress',[['low','Low'],['medium','Medium'],['high','High']],r.stress));
+  }else if(j==='hair'){
+    h+=fld('Hair fall today',seg(j,'shed',[['few','A few strands'],['some','Some'],['lots','Lots']],r.shed))+
+      fld('How does your scalp feel?',chips(j,'scalp',SCALP,r.scalp))+
+      fld('What did you do for your hair?',chips(j,'did',HAIRDO,r.did))+
+      fld('What did you eat?',chips(j,'food',HAIRFOOD,r.food))+
+      fld('Stress today',seg(j,'stress',[['low','Low'],['medium','Medium'],['high','High']],r.stress));
+  }else if(j==='energy'){
+    h+=fld('Energy today',seg(j,'energy',[[1,'Drained'],[2,'Low'],[3,'Okay'],[4,'Good'],[5,'Charged']],r.energy))+
+      fld('Anything feel off?',chips(j,'syms',ESYM,r.syms))+
+      fld('Cups of chai or coffee',' <div class="stepper"><button data-a="cup" data-v="-1" aria-label="Fewer cups">−</button><b>'+(r.caffeine||0)+'</b><button data-a="cup" data-v="1" aria-label="More cups">+</button></div>')+
+      fld('Movement today',seg(j,'move',[['rest','Rested'],['walk','Walked'],['workout','Worked out']],r.move))+
+      fld('Stress today',seg(j,'stress',[['low','Low'],['medium','Medium'],['high','High']],r.stress))+
+      '<div class="chips">'+flagChip(j,'screens','Scrolled in bed',r.screens)+'</div>';
+  }else{
+    var kn=esc(S.kid.name||'your child'),n=(r.rb||[]).length;
+    h+=(S.kid.name?'':'<div class="field"><label for="kn2">Your child’s first name</label><input type="text" id="kn2" data-i="kidname" placeholder="For example, Aarav"></div>')+
+      fld('How did '+kn+' eat today?',seg(j,'appetite',[['well','Ate well'],['some','Ate some'],['refused','Refused']],r.appetite))+
+      fld('Rainbow plate: '+n+' of 5 stickers',(function(){return '<div class="chips">'+RAINBOW.map(function(c){var on=(r.rb||[]).indexOf(c[0])>-1;return '<button class="chip" aria-pressed="'+on+'" data-a="tog" data-j="kids" data-f="rb" data-v="'+c[0]+'"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:'+RCOL[c[0]]+';margin-right:8px;vertical-align:-1px;border:1px solid var(--line)"></span>'+c[1]+'<span class="small" style="opacity:.8"> '+c[2]+'</span></button>';}).join('')+'</div>';})())+
+      '<div class="chips">'+flagChip(j,'tried','Tried a new food',r.tried)+'</div>'+
+      fld('Outdoor play',seg(j,'play',[['none','None'],['30','30 min'],['60','60+ min']],r.play))+
+      fld('Night sleep',seg(j,'sleep',[['lt9','Under 9 h'],['9','9 to 11 h'],['11','11 h+']],r.sleep));
+  }
+  h+='<button class="btn jc" data-a="save" data-j="'+j+'">Save today’s check-in</button>'+(r.saved?'<p class="note">You already saved today. Saving again updates it.</p>':'')+'</div>';
+  return h;
+}
+function careForm(j){
+  var r=peek(j,today()),h='<div class="stack j-'+j+'">';
+  if(!r||!r.saved)h+='<div class="hint">Do today’s check-in first and these suggestions will match how you feel.</div>';
+  if(j==='cycle'){var ci=cycleInfo();if(ci.has){var P=PHASES[ci.phase];h+='<div class="card tint"><span class="eyebrow">Day '+ci.day+' · '+P.name+'</span><p>'+P.blurb+'</p></div>';}}
+  ritualsFor(j).forEach(function(x){h+=ritualCard(j,x);});
+  var dis={cycle:'Severe pain, very heavy bleeding, or no period for over three months should be checked by a doctor.',hair:'Sudden patchy hair loss or a painful scalp should be seen by a doctor or trichologist.',energy:'Constant exhaustion, low mood that lasts, or poor sleep for weeks deserves a conversation with a doctor.',kids:'For weight, growth or feeding worries, speak to your child’s paediatrician. This app does not replace their advice.'};
+  return h+'<p class="note">'+dis[j]+'</p></div>';
+}
+function insightsForm(j){
+  var h='<div class="stack lg j-'+j+'">',any=false;
+  if(j==='cycle'){
+    var ci=cycleInfo();
+    if(ci.lens.length){any=true;var mx=Math.max.apply(null,ci.lens.concat([35]));
+      h+='<section class="card stack"><h3>Your cycle lengths</h3>'+bars(ci.lens.map(function(v){return v/mx;}),ci.lens.map(function(v){return v+'d';}),j)+'<p>Average '+ci.avg+' days'+(ci.irr?'. These vary quite a bit. A doctor can look at this with you.':'.')+'</p></section>';}
+    var sc=symCounts(30);
+    if(sc.length){any=true;var top=sc[0][1];h+='<section class="card stack"><h3>Symptoms in the last 30 days</h3>'+sc.slice(0,5).map(function(x){return '<div class="stack" style="gap:4px"><div class="row between"><span>'+SYMN[x[0]]+'</span><b>'+x[1]+' day'+(x[1]===1?'':'s')+'</b></div><div class="meter"><i style="width:'+Math.round(x[1]/top*100)+'%;background:var(--jc)"></i></div></div>';}).join('')+'</section>';}
+    var sl=sleepLink();if(sl){any=true;h+='<section class="card tint"><span class="eyebrow">A pattern</span><p>'+sl+' It is a pattern, not a diagnosis.</p></section>';}
+  }else if(j==='hair'){
+    var ks=lastN(14),vals=ks.map(function(k){var r=peek('hair',k);return r&&r.shed?shedLevel(r.shed)/3:null;});
+    if(vals.some(function(v){return v!=null;})){any=true;var lots=vals.filter(function(v){return v===1;}).length;
+      h+='<section class="card stack"><h3>Hair fall, last 14 days</h3>'+bars(vals,ks.map(dow),j)+'<p>Heavy shedding on '+lots+' of the last 14 days. Taller bar means more hair fall.</p></section>';}
+  }else if(j==='energy'){
+    var ke=lastN(14),ev=ke.map(function(k){var r=peek('energy',k);return r&&r.energy?r.energy/5:null;});
+    if(ev.some(function(v){return v!=null;})){any=true;h+='<section class="card stack"><h3>Energy, last 14 days</h3>'+bars(ev,ke.map(dow),j)+'</section>';}
+    var el=energyLink();if(el){any=true;h+='<section class="card tint"><span class="eyebrow">A pattern</span><p>'+el+'</p></section>';}
+  }else{
+    var kk=lastN(7),kv=kk.map(function(k){var r=peek('kids',k);return r&&r.saved?(r.rb||[]).length/5:null;});
+    if(kv.some(function(v){return v!=null;})){any=true;var tr=kk.filter(function(k){var r=peek('kids',k);return r&&r.tried;}).length;
+      h+='<section class="card stack"><h3>Rainbow plate, last 7 days</h3>'+bars(kv,kk.map(dow),j)+'<p>'+esc(S.kid.name||'Your child')+' tried a new food on '+tr+' day'+(tr===1?'':'s')+' this week. A full bar means all five colours.</p></section>';}
+  }
+  if(!any)h+='<div class="hint">Insights appear after a few days of check-ins. Come back after your next two or three.</div>';
+  return h+'</div>';
+}
+function journeyDetail(){
+  var j=V.j,m=J[j],title=j==='kids'&&S.kid.name?esc(S.kid.name)+'’s day':m.name;
+  var h='<div class="stack lg j-'+j+'"><button class="back" data-a="back">‹ All journeys</button><div class="card tint stack"><span class="eyebrow">'+m.brand+'</span><h1>'+title+'</h1><p>'+m.why+'</p></div>'+
+    '<div class="tabs">'+[['log','Check-in'],['care','Care plan'],['ins','Insights']].map(function(t){return '<button aria-pressed="'+(V.sub===t[0])+'" data-a="sub" data-v="'+t[0]+'">'+t[1]+'</button>';}).join('')+'</div>';
+  h+=V.sub==='log'?logForm(j):V.sub==='care'?careForm(j):insightsForm(j);
+  return h+'</div>';
+}
+
+/* ---------- My Mosaic ---------- */
+function mosaicView(){
+  var L=level(),n=S.tiles.length,cur=n%36||(n?36:0),boards=Math.floor(n/36),cnt={};
+  S.tiles.forEach(function(t){cnt[t.j]=(cnt[t.j]||0)+1;});
+  var h='<div class="stack lg"><div><h1>My Mosaic</h1><p class="muted">Every check-in and care ritual adds a tile.</p></div>';
+  h+='<section class="card stack">'+boardHtml(false)+'<div class="row between"><b>'+cur+' of 36 tiles</b><span class="pill">'+boards+' board'+(boards===1?'':'s')+' finished</span></div><div class="chips">'+JIDS.filter(has).map(function(j){return '<span class="pill"><i style="width:12px;height:12px;border-radius:4px;background:'+cv(j)+';display:inline-block"></i>'+J[j].name+' '+(cnt[j]||0)+'</span>';}).join('')+'</div></section>';
+  h+='<section class="stack"><h2>Treat cards</h2><p class="muted">Unlock one at each level. You decide when to use it.</p>'+TREATS.map(function(t){var ok=L.i>=t.lv;return '<div class="card'+(ok?'':' ')+'" style="'+(ok?'':'opacity:.5')+'"><div class="row between"><h3>'+t.t+'</h3><span class="pill">'+(ok?'Unlocked':'Level '+(t.lv+1))+'</span></div><p class="muted">'+(ok?t.d:'Keep collecting tiles to unlock this one.')+'</p></div>';}).join('')+'</section>';
+  h+='<section class="stack"><h2>Badges</h2><div class="badges">'+BADGES.map(function(b){var ok=!!S.badges[b[0]];return '<div class="bdg'+(ok?'':' lock')+'"><div class="hex">'+b[1]+'</div><b>'+b[2]+'</b><span>'+b[3]+'</span></div>';}).join('')+'</div></section></div>';
+  return h;
+}
+
+/* ---------- More ---------- */
+function moreView(){
+  var h='<div class="stack lg"><h1>More</h1>';
+  h+='<section class="card stack"><h2>Care summary</h2><p class="muted">A plain-text summary you can show a doctor, a Bodywise or Man Matters expert, or your paediatrician.</p><textarea id="sum" readonly aria-label="Care summary">'+esc(summary())+'</textarea><button class="btn" data-a="copy">Copy summary</button></section>';
+  h+='<section class="card stack"><h2>Settings</h2>'+fld('Text size',textSizeSeg())+'<div class="field"><label for="nm2">Your name</label><input type="text" id="nm2" data-i="name" value="'+esc(S.name)+'"></div>'+
+    fld('Journeys',JIDS.map(function(j){return '<button class="chip j-'+j+'" aria-pressed="'+has(j)+'" data-a="jtog" data-v="'+j+'">'+J[j].name+'</button>';}).join(' '))+'</section>';
+  h+='<section class="card stack"><h2>Demo and reset</h2><p class="muted">Load a sample profile with two weeks of check-ins across all four journeys.</p><button class="btn ghost" data-a="demo">Load demo profile</button>'+
+    (V.confirm?'<p><b>This erases everything saved here.</b></p><div class="row"><button class="btn sm" data-a="reset-yes">Yes, erase it</button><button class="btn sm ghost" data-a="reset-no">Keep my data</button></div>':'<button class="btn ghost" data-a="reset-ask">Start over</button>')+'</section>';
+  h+='<section class="card tint j-kids stack"><h2>How this maps to Mosaic Wellness</h2><p><b>Be Bodywise:</b> cycle and PCOS tracking, symptom-led care rituals, hair and skin habits.</p><p><b>Man Matters:</b> hair fall, energy, sleep and stress.</p><p><b>Little Joys:</b> a sticker-chart for picky eaters and a daily log for parents.</p><p class="note">Concept build. Data stays on this device. Wellness guidance only, not medical advice.</p></section></div>';
+  return h;
+}
+
+/* ---------- Render ---------- */
+function render(top){
+  var y=window.scrollY;
+  nav.hidden=!S.onboarded;
+  document.documentElement.style.setProperty('--fs',[16,18,20][S.size]+'px');
+  if(!S.onboarded)view.innerHTML=onboarding();
+  else{
+    view.innerHTML=V.tab==='today'?todayView():V.tab==='journeys'?(V.j?journeyDetail():journeysView()):V.tab==='mosaic'?mosaicView():moreView();
+    Array.prototype.forEach.call(nav.querySelectorAll('button'),function(b){if(b.dataset.v===V.tab)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});
+  }
+  window.scrollTo(0,top?0:y);
+}
+
+/* ---------- Events ---------- */
+function num(v){return /^-?\d+$/.test(v)?Number(v):v;}
+function act(a,el){
+  var v=el.dataset.v,j=el.dataset.j,f=el.dataset.f,r;
+  switch(a){
+    case 'tab':V.tab=v;V.j=null;V.confirm=false;render(true);return;
+    case 'open':if(!has(j=v)){S.journeys.push(v);save();}V.tab='journeys';V.j=v;V.sub='log';render(true);return;
+    case 'back':V.j=null;render(true);return;
+    case 'sub':V.sub=v;render(true);return;
+    case 'set':dj(j)[f]=num(v);save();render();return;
+    case 'tog':r=dj(j);r[f]=r[f]||[];var ix=r[f].indexOf(v);if(ix>-1)r[f].splice(ix,1);else r[f].push(v);
+      if(f==='rb'&&r[f].length===5)toast('Rainbow complete! Five stickers');save();render();return;
+    case 'flag':r=dj(j);r[f]=!r[f];save();render();return;
+    case 'cup':r=dj('energy');r.caffeine=Math.max(0,Math.min(9,(r.caffeine||0)+Number(v)));save();render();return;
+    case 'plen':S.periodLen=Math.max(2,Math.min(10,S.periodLen+Number(v)));save();render();return;
+    case 'period':
+      var pd=document.getElementById('pdate'),dt=(pd&&pd.value)||today();
+      if(dt>today()){toast('Pick today or an earlier date');return;}
+      if(S.periods.indexOf(dt)<0)S.periods.push(dt);S.periods.sort();
+      award('cycle','period-'+dt,'period',15);toast('Period start saved for '+fmt(dt));save();render();return;
+    case 'undoPeriod':S.periods.sort();S.periods.pop();save();toast('Last date removed');render();return;
+    case 'save':
+      dj(j).saved=true;var got=award(j,'log','checkin',10);if(!got)toast('Check-in updated');
+      allQuestsBonus();V.sub='care';save();render(true);return;
+    case 'rit':doRitual(j,v);render();return;
+    case 'say':
+      try{window.speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(el.dataset.t);u.rate=.95;window.speechSynthesis.speak(u);}catch(e){toast('Listening is not available here');}
+      return;
+    case 'water':
+      r=day(today());var n=Number(v);r.water=(r.water===n)?n-1:n;
+      if(r.water>=6)award(S.journeys[0]||'cycle','water6','water',8);allQuestsBonus();save();render();return;
+    case 'sleep':
+      r=day(today());var cur=r.sleep==null?7:r.sleep;r.sleep=Math.max(3,Math.min(12,cur+Number(v)));
+      if(r.sleep>=7)award(S.journeys[0]||'cycle','sleep7','sleep',8);save();render();return;
+    case 'quest':
+      var q=quests()[Number(v)];if(!q)return;
+      if(q.go==='journey'){V.tab='journeys';V.j=q.j;V.sub='log';render(true);}
+      else if(q.go==='care'){V.tab='journeys';V.j=S.journeys[0];V.sub='care';render(true);}
+      else{var b=document.getElementById('basics');if(b)b.scrollIntoView({behavior:'smooth',block:'center'});}
+      return;
+    case 'dismiss':S.hintDone=true;save();render();return;
+    case 'size':S.size=Number(v);save();render();return;
+    case 'jtog':
+      if(has(v)){if(S.journeys.length>1)S.journeys.splice(S.journeys.indexOf(v),1);else toast('Keep at least one journey');}
+      else S.journeys.push(v);
+      S.journeys.sort(function(a,b){return JIDS.indexOf(a)-JIDS.indexOf(b);});save();render();return;
+    case 'copy':
+      var ta=document.getElementById('sum');
+      try{navigator.clipboard.writeText(ta.value).then(function(){toast('Summary copied');},function(){ta.select();toast('Press and hold to copy');});}
+      catch(e){ta.select();toast('Press and hold to copy');}
+      return;
+    case 'demo':seedDemo();V.tab='today';V.j=null;V.ob=0;toast('Demo profile loaded');render(true);return;
+    case 'reset-ask':V.confirm=true;render();return;
+    case 'reset-no':V.confirm=false;render();return;
+    case 'reset-yes':S=blank();save();V={tab:'today',j:null,sub:'log',ob:0,confirm:false};render(true);return;
+    case 'ob-next':V.ob=Math.min(3,V.ob+1);render(true);return;
+    case 'ob-back':V.ob=Math.max(0,V.ob-1);render(true);return;
+    case 'ob-finish':
+      S.onboarded=true;if(S.periods.length)S.periods.sort();V.tab='today';
+      toast('Welcome'+(S.name?', '+S.name:'')+'. Your mosaic is ready');save();render(true);return;
+  }
+}
+document.addEventListener('click',function(e){
+  var b=e.target.closest('[data-a]');if(!b||b.disabled)return;
+  var a=b.dataset.a;
+  if(a==='jtog'&&!S.onboarded){var v=b.dataset.v,i=S.journeys.indexOf(v);if(i>-1)S.journeys.splice(i,1);else S.journeys.push(v);
+    S.journeys.sort(function(x,y){return JIDS.indexOf(x)-JIDS.indexOf(y);});save();render();return;}
+  act(a,b);
+});
+document.addEventListener('input',function(e){
+  var t=e.target,k=t.dataset&&t.dataset.i;if(!k)return;
+  if(k==='name')S.name=t.value.trim();
+  else if(k==='kidname')S.kid.name=t.value.trim();
+  else if(k==='kidage')S.kid.age=Math.max(1,Math.min(12,Number(t.value)||4));
+  else if(k==='pdate'&&t.value&&t.value<=today()){S.periods=[t.value];}
+  save();
+});
+
+/* ---------- Start ---------- */
+if(S.demo&&S.onboarded){checkBadges();}
+render(true);
+})();
+</script>
+
+</body></html>
